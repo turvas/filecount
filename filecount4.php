@@ -96,7 +96,7 @@ else {// web req
 	$depth = isset($_GET["depth"]) ? $_GET["depth"] : "1";
 	
 	$path = filter_var($path, FILTER_SANITIZE_STRING);
-	//$depth = filter_var($depth,FILTER_SANITIZE_NUMBER_INT);
+	$depth = filter_var($depth,FILTER_SANITIZE_NUMBER_INT);
 
 	if (!is_string($path)) $path = ".";
 	if (is_string($depth))	$depth = intval($depth);		
