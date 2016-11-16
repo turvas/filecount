@@ -15,5 +15,7 @@ in CLI following arguments are accepted:
 
 -v          verbose output
 
+-n          no output at all (helpful if running from cron)
+
 
 ps. no space is allowed between option and value.
