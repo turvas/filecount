@@ -1,6 +1,5 @@
 <?php
 // GPL by kalev, turvas@gmail.com
-
 // creates URL link based on current location of this script and added newpath = ./somedir
 function makeLink($newpath){
 	$uri = $_SERVER["REQUEST_URI"];			// /somedir/filecount4.php?path=.&depth=1 
@@ -17,7 +16,6 @@ function makeLink($newpath){
 	$link = "<a href=\"$uri2\">$newpath</a>";
 	return $link;
 }
-
 // maxprint: how deep subdirs to print
 define("MAXPRINT", 2);
 // returns all recusrisvley below path and 
@@ -29,7 +27,7 @@ function getFileCount($path, $maxdepth = MAXPRINT) {
     foreach($files as $t) {
         if(in_array($t, $ignore)) continue;
         $fullpath = rtrim($path, '/') . '/' . $t;
-        if ( is_dir($fullpath) ) {
+        if ( is_dir($fullpath) && !is_link($fullpath)) {		// only directories, which are not links
         	$subcount = getFileCount($fullpath, $maxdepth-1);
         	if($maxdepth>0)
         		echo "<tr><td>".($maxdepth==MAXPRINT?"<b>":"").makeLink($fullpath).($maxdepth==MAXPRINT?"</b>":"")."</td><td>".$subcount."</td></tr>";
@@ -40,23 +38,18 @@ function getFileCount($path, $maxdepth = MAXPRINT) {
     }
     return $count;
 }
-
-
 // some constants
 define("TRESHOLD", "90"); // % to make action
 define("FROM", "cron@wavecom.ee");
 define("SUBJECT", "File (inode) limit critical");
 define("MESSAGE", "File (inode) limit critical %d%%, %s of permitted %s on node: %s, path: %s\n");
-
 //// START ////
-
 // could be long tree..
 set_time_limit(120);
-
 if (PHP_SAPI === 'cli' || empty($_SERVER['REMOTE_ADDR'])){  // command line	
 	// php filecount4.php -m10000 -etest@test.com
 	// most options (except m) are optional, thus not accept space between option key and value
-	$options = getopt("m:p::e::t::d::v"); // path, maxcount, email, treshold %, depth, verbose
+	$options = getopt("m:p::e::t::d::vn"); // path, maxcount, email, treshold %, depth, verbose, no-output
 	//var_dump($options);
 	$maxcount = $options["m"];
 	if (!empty($maxcount)) {
@@ -79,7 +72,9 @@ if (PHP_SAPI === 'cli' || empty($_SERVER['REMOTE_ADDR'])){  // command line
 			// echo "suurem\n";
 			$usage = $count * 100 / $maxcount;
 			$txt = sprintf(MESSAGE, $usage, number_format($count), number_format($maxcount), gethostname (), $rpath );
-			echo "WARNING: ". $txt;
+			$no_output = $options["n"];
+			if (!isset($no_output))	// value is bool (false)!
+				echo "WARNING: ". $txt;
 			$mailto = $options["e"];
 			if (!empty($mailto)){
 				$headers = "From: " .FROM. "\r\n";
@@ -111,11 +106,9 @@ else {// web req
 	
 	$path = filter_var($path, FILTER_SANITIZE_STRING);
 	$depth = filter_var($depth,FILTER_SANITIZE_NUMBER_INT);
-
 	if (!is_string($path)) $path = ".";
 	if (is_string($depth))	$depth = intval($depth);		
 	else $depth = 1;
-
 	echo "path=$path <br>"; // . 1
 	$len = strrpos($path,'/',0);	// last /
 	if ($len !== FALSE)
@@ -123,11 +116,9 @@ else {// web req
 	else	
 		$parent = '.';
 	echo "parent=".makeLink($parent)."<br>";
-
 	echo "<table border=\"1\"> ";
 	echo "<tr> <th>Path</th> <th>Files</th> </tr>";
 	echo "<b> Total Files:".getFileCount($path, $depth)."</b>";
 	echo "</table>";
 }
-
 ?>
