@@ -56,13 +56,17 @@ set_time_limit(120);
 if (PHP_SAPI === 'cli' || empty($_SERVER['REMOTE_ADDR'])){  // command line	
 	// php filecount4.php -m10000 -etest@test.com
 	// most options (except m) are optional, thus not accept space between option key and value
-	$options = getopt("m:p::e::t::"); // path, maxcount, email, treshold %
+	$options = getopt("m:p::e::t::d::v"); // path, maxcount, email, treshold %, depth, verbose
 	//var_dump($options);
 	$maxcount = $options["m"];
 	if (!empty($maxcount)) {
 		$path = $options["p"];
 		if (empty($path)) $path = '.';			// if path not given, assume current dir
-		$count = getFileCount($path, $depth);	// real job is here
+		ob_start ();
+		$depth = $options["d"];
+		$count = getFileCount($path, $depth);	// real job is here, if depth > 0, prits some stuf to output buffer
+		$ob = ob_get_contents();
+		ob_end_clean();
 		//echo $count."\n";
 		$rpath = realpath($path);
 		$maxcount = intval($maxcount);
@@ -78,7 +82,17 @@ if (PHP_SAPI === 'cli' || empty($_SERVER['REMOTE_ADDR'])){  // command line
 			echo "WARNING: ". $txt;
 			$mailto = $options["e"];
 			if (!empty($mailto)){
-				$headers = "From: ".FROM;
+				$headers = "From: " .FROM. "\r\n";
+				if (strlen($ob)){
+					$headers .= "MIME-Version: 1.0" . "\r\n";
+					$headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+					$body = "<html> <head> <title>$txt</title> </head> <body>";
+					$txt = $body . $txt . "<br>" .$ob. " </body> </html>";
+				}
+				$verbose = $options["v"];
+				if (isset($verbose)){	// value is bool (flase)!
+					echo " sending email to: $mailto \r\n with headers: \r\n$headers \r\n and message:\r\n$txt \n";
+				}
 				$ret = mail($mailto,SUBJECT,$txt,$headers);
 				if (!$ret)// error
 					echo "ERROR: sending mail() failed";
