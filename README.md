@@ -17,7 +17,10 @@ in CLI following arguments are accepted:
 
 -n          no output at all (helpful if running from cron)
 
+ps. no space is allowed between option and value.
+
 for example in cron, to trigger email to username@gmail.com upon reaching 90% of 100 000 files from username home dir and display 1 level of subdirectories, use something like: 
+
 /usr/bin/php /home/username/filecount4.php -m100000 -eusername@gmail.com -p/home/username -d1 -n
 
-ps. no space is allowed between option and value.
+
