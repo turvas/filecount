@@ -9,7 +9,11 @@ in CLI following arguments are accepted:
 
 -eemail     e-mail address to send notification
 
--ttreshold  percentage of maxcount, when warning email is sent
+-ttreshold  percentage (as number)  of maxcount, when warning email is sent
+
+-ddepth     number of directory levels to print
+
+-v          verbose output
 
 
 ps. no space is allowed between option and value.
